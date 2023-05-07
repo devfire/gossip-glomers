@@ -1,7 +1,7 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Both STDIN and STDOUT messages are JSON objects
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Message {
     /// A string identifying the node this message came from
     pub src: String,
@@ -13,7 +13,7 @@ pub struct Message {
     body: MessageBody,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct MessageBody {
     /// A string identifying the type of message this is
     msg_type: String,
