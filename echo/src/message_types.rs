@@ -24,4 +24,12 @@ struct MessageBody {
     /// For req/response, optional msg_id of the request
     in_reply_to: Option<usize>,
 
+    /// Actual payload with various msg types
+    #[serde(flatten)]
+    payload: Payload,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+enum Payload {
+    Echo { echo: String },
 }
