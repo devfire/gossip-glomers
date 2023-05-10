@@ -1,5 +1,3 @@
-use std::io::StdoutLock;
-
 use anyhow::{bail, Context};
 use echo::protocol::{Body, Message, Payload};
 use serde::Serialize;
@@ -42,7 +40,7 @@ fn main() -> anyhow::Result<()> {
                 reply.serialize(&mut output)?;
             }
             echo::protocol::Payload::EchoOk { .. } => {}
-            echo::protocol::Payload::InitOk { .. } => {}
+            echo::protocol::Payload::InitOk { .. } => bail!("Unexpected InitOk received"),
         }
     }
 
