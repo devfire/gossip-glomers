@@ -1,15 +1,16 @@
+use std::io::{self, Write};
+
 use anyhow::{bail, Context};
 use echo::protocol::{Body, Message, Payload};
-use serde::Serialize;
 
 mod protocol;
 
 fn main() -> anyhow::Result<()> {
     let std_reader = std::io::stdin().lock();
-    let std_writer = std::io::stdout().lock();
+    let mut std_writer = io::BufWriter::new(std::io::stdout().lock());
 
     let inputs = serde_json::Deserializer::from_reader(std_reader).into_iter::<Message>();
-    let mut output = serde_json::Serializer::new(std_writer);
+    // let mut output = serde_json::Serializer::new(std_writer);
 
     for input in inputs {
         let input = input.context("Unable to deserialize input.")?;
@@ -25,7 +26,12 @@ fn main() -> anyhow::Result<()> {
                         payload: Payload::InitOk,
                     },
                 };
-                reply.serialize(&mut output)?;
+
+                // Serialize the struct as JSON
+                let reply_json = serde_json::to_string(&reply)?;
+
+                // Print the JSON to stdout
+                writeln!(std_writer, "{}", reply_json)?;
             }
             echo::protocol::Payload::Echo { msg } => {
                 let reply = Message {
@@ -37,7 +43,12 @@ fn main() -> anyhow::Result<()> {
                         payload: Payload::EchoOk { msg },
                     },
                 };
-                reply.serialize(&mut output)?;
+
+                // Serialize the struct as JSON
+                let reply_json = serde_json::to_string(&reply)?;
+
+                // Print the JSON to stdout
+                writeln!(std_writer, "{}", reply_json)?;
             }
             echo::protocol::Payload::EchoOk { .. } => {}
             echo::protocol::Payload::InitOk { .. } => bail!("Unexpected InitOk received"),
