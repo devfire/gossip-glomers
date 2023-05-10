@@ -15,7 +15,8 @@ pub struct Message {
 
 /// RPC messages exchanged with Maelstrom's clients
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Body { //"type" is defined below with a serde tag
+pub struct Body {
+    //"type" is defined below with a serde tag
     /// An optional unique integer identifier
     pub msg_id: Option<usize>,
 
@@ -26,12 +27,21 @@ pub struct Body { //"type" is defined below with a serde tag
     #[serde(flatten)]
     pub payload: Payload,
 }
- 
+
 /// A string identifying the type of message this is
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
 pub enum Payload {
-    Echo { msg: String },
-    EchoOk { msg: String },
+    Echo {
+        msg: String,
+    },
+    EchoOk {
+        msg: String,
+    },
+    Init {
+        node_id: String,
+        node_ids: Vec<String>,
+    },
+    InitOk,
 }
