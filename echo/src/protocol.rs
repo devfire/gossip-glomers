@@ -10,15 +10,12 @@ pub struct Message {
     pub dest: String,
 
     /// An object: the payload of the message
-    pub body: MessageBody,
+    pub body: Body,
 }
 
 /// RPC messages exchanged with Maelstrom's clients
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MessageBody {
-    /// A string identifying the type of message this is
-    pub msg_type: String,
-
+pub struct Body { //"type" is defined below with a serde tag
     /// An optional unique integer identifier
     pub msg_id: Option<usize>,
 
@@ -29,8 +26,8 @@ pub struct MessageBody {
     #[serde(flatten)]
     pub payload: Payload,
 }
-
-/// The actual payload gets flattened and then converted to json in snake_case
+ 
+/// A string identifying the type of message this is
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 #[serde(rename_all = "snake_case")]
