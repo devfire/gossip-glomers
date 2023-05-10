@@ -1,18 +1,24 @@
-use serde::Deserialize;
-use std::io::{self, BufRead};
+use anyhow::Context;
+// use serde::Deserialize;
+// use std::io::{self, BufRead};
 
-use crate::message_types::Message;
+use crate::protocol::{Message, Payload::Echo, Payload::EchoOk};
 
-mod message_types;
+mod protocol;
 
-fn main() {
-    let input = std::io::stdin();
-    for line in input.lock().lines() {
-        // here line is a String without the trailing newline
-        // Deserialize the JSON object into a struct
-        let message: Message = serde_json::from_str(&line).unwrap();
+fn main() -> anyhow::Result<()> {
+    let std_reader = std::io::stdin().lock();
 
-        // Do something with the struct
-        println!("Read person: {:?}", message);
+    let inputs = serde_json::Deserializer::from_reader(std_reader).into_iter::<Message>();
+
+    for input in inputs {
+        let input = input.context("Unable to deserialize input.")?;
+
+        match input.body.payload {
+            Echo { msg } => todo!(),
+            EchoOk { .. } => {}
+        }
     }
+
+    Ok(())
 }

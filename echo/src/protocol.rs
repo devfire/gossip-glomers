@@ -10,26 +10,31 @@ pub struct Message {
     pub dest: String,
 
     /// An object: the payload of the message
-    body: MessageBody,
+    pub body: MessageBody,
 }
 
+/// RPC messages exchanged with Maelstrom's clients
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct MessageBody {
+pub struct MessageBody {
     /// A string identifying the type of message this is
-    msg_type: String,
+    pub msg_type: String,
 
     /// An optional unique integer identifier
-    msg_id: Option<usize>,
+    pub msg_id: Option<usize>,
 
     /// For req/response, optional msg_id of the request
-    in_reply_to: Option<usize>,
+    pub in_reply_to: Option<usize>,
 
     /// Actual payload with various msg types
     #[serde(flatten)]
-    payload: Payload,
+    pub payload: Payload,
 }
 
+/// The actual payload gets flattened and then converted to json in snake_case
 #[derive(Debug, Clone, Serialize, Deserialize)]
-enum Payload {
-    Echo { echo: String },
+#[serde(tag = "type")]
+#[serde(rename_all = "snake_case")]
+pub enum Payload {
+    Echo { msg: String },
+    EchoOk { msg: String },
 }
