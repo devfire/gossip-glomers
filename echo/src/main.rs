@@ -5,7 +5,19 @@ use echo::protocol::{Body, Message, Payload};
 
 mod protocol;
 
+use env_logger::Env;
+use log::{error, info};
+
 fn main() -> anyhow::Result<()> {
+    // Setup the logging framework
+    let env = Env::default()
+        .filter_or("LOG_LEVEL", "info")
+        .write_style_or("LOG_STYLE", "always");
+
+    env_logger::init_from_env(env);
+
+    info!("Starting the maelstrom client.");
+
     let std_reader = std::io::stdin().lock();
     let mut std_writer = io::BufWriter::new(std::io::stdout().lock());
 
@@ -14,6 +26,8 @@ fn main() -> anyhow::Result<()> {
 
     for input in inputs {
         let input = input.context("Unable to deserialize input.")?;
+
+        info!("Received {:?}", input);
 
         match input.body.payload {
             echo::protocol::Payload::Init { .. } => {
@@ -29,6 +43,8 @@ fn main() -> anyhow::Result<()> {
 
                 // Serialize the struct as JSON
                 let reply_json = serde_json::to_string(&reply)?;
+
+                info!("Sending back {:?}", reply_json);
 
                 // Print the JSON to stdout
                 writeln!(std_writer, "{}", reply_json)?;
