@@ -1,6 +1,6 @@
-use std::io::{self, BufRead, Write};
+use std::io::{BufRead, Write};
 
-use anyhow::{bail, Context};
+use anyhow::bail;
 use echo::protocol::{Body, Message, Payload};
 
 mod protocol;
@@ -9,23 +9,8 @@ mod protocol;
 // use log::{error, info};
 
 fn main() -> anyhow::Result<()> {
-    // Setup the logging framework
-    // let env = Env::default()
-    //     .filter_or("LOG_LEVEL", "info")
-    //     .write_style_or("LOG_STYLE", "always");
-
-    // env_logger::init_from_env(env);
-
-    // info!("Starting the maelstrom client.");
-
-    // let stdin = std::io::stdin().lock();
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
-    // let inputs = serde_json::Deserializer::from_reader(stdin).into_iter::<Message>();
-
-    // let stdout = std::io::stdout().lock();
-
-    // let mut output = serde_json::Serializer::new(stdout);
 
     // Message IDs should be unique on the node which sent them.
     // For instance, each node can use a monotonically increasing integer as their source of message IDs.
