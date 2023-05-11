@@ -34,10 +34,10 @@ pub struct Body {
 #[serde(rename_all = "snake_case")]
 pub enum Payload {
     Echo {
-        msg: String,
+        echo: String,
     },
     EchoOk {
-        msg: String,
+        echo: String,
     },
     Init {
         node_id: String,

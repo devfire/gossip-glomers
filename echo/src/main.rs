@@ -63,14 +63,14 @@ fn main() -> anyhow::Result<()> {
                     // Send the reply back as byte array
                     stdout.write_all(reply_json.as_bytes())?;
                 }
-                echo::protocol::Payload::Echo { msg } => {
+                echo::protocol::Payload::Echo { echo } => {
                     let reply = Message {
                         src: input.dest,
                         dest: input.src,
                         body: Body {
                             msg_id: Some(generated_msg_id),
                             in_reply_to: input.body.msg_id,
-                            payload: Payload::EchoOk { msg },
+                            payload: Payload::EchoOk { echo },
                         },
                     };
 
