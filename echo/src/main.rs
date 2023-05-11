@@ -55,7 +55,10 @@ fn main() -> anyhow::Result<()> {
                     };
 
                     // Serialize the reply into a JSON string
-                    let reply_json = serde_json::to_string(&reply)?;
+                    let mut reply_json = serde_json::to_string(&reply)?;
+
+                    reply_json.push('\n');
+
 
                     // Send the reply back as byte array
                     stdout.write_all(reply_json.as_bytes())?;
@@ -72,7 +75,9 @@ fn main() -> anyhow::Result<()> {
                     };
 
                     // Serialize the reply into a JSON string
-                    let reply_json = serde_json::to_string(&reply)?;
+                    let mut reply_json = serde_json::to_string(&reply)?;
+
+                    reply_json.push('\n');
 
                     // Send the reply back as byte array
                     stdout.write_all(reply_json.as_bytes())?;
