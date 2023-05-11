@@ -12,17 +12,10 @@ fn main() -> anyhow::Result<()> {
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
 
-    // Message IDs should be unique on the node which sent them.
-    // For instance, each node can use a monotonically increasing integer as their source of message IDs.
-    let mut generated_msg_id: usize = 0;
-
     // Use the lines iterator from the io::BufRead trait. 
     // This iterator yields lines from a buffer, where each line is terminated by a newline character
-    for line in stdin.lock().lines() {
-        // let input = input.context("Unable to deserialize input.")?;
-
-        // info!("Received {:?}", input);
-
+    for (generated_msg_id, line) in stdin.lock().lines().enumerate() {
+    
         if let Ok(line) = line {
             // To deserialize a JSON line, use the from_str function from the serde_json crate. 
             // This function takes a string and deserializes it into a struct. 
@@ -71,7 +64,6 @@ fn main() -> anyhow::Result<()> {
                 echo::protocol::Payload::InitOk { .. } => bail!("Unexpected InitOk received"),
             }
         }
-        generated_msg_id += 1;
     } // end of for loop
 
     Ok(())
