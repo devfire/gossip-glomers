@@ -1,75 +1,88 @@
-use std::io::{self, Write};
+use std::io::{self, BufRead, Write};
 
 use anyhow::{bail, Context};
 use echo::protocol::{Body, Message, Payload};
 
 mod protocol;
 
-use env_logger::Env;
-use log::{error, info};
+// use env_logger::Env;
+// use log::{error, info};
 
 fn main() -> anyhow::Result<()> {
     // Setup the logging framework
-    let env = Env::default()
-        .filter_or("LOG_LEVEL", "info")
-        .write_style_or("LOG_STYLE", "always");
+    // let env = Env::default()
+    //     .filter_or("LOG_LEVEL", "info")
+    //     .write_style_or("LOG_STYLE", "always");
 
-    env_logger::init_from_env(env);
+    // env_logger::init_from_env(env);
 
-    info!("Starting the maelstrom client.");
+    // info!("Starting the maelstrom client.");
 
-    let std_reader = std::io::stdin().lock();
-    let mut std_writer = io::BufWriter::new(std::io::stdout().lock());
+    // let stdin = std::io::stdin().lock();
+    let stdin = std::io::stdin();
+    let mut stdout = std::io::stdout();
+    // let inputs = serde_json::Deserializer::from_reader(stdin).into_iter::<Message>();
 
-    let inputs = serde_json::Deserializer::from_reader(std_reader).into_iter::<Message>();
-    // let mut output = serde_json::Serializer::new(std_writer);
+    // let stdout = std::io::stdout().lock();
 
-    for input in inputs {
-        let input = input.context("Unable to deserialize input.")?;
+    // let mut output = serde_json::Serializer::new(stdout);
 
-        info!("Received {:?}", input);
+    // Message IDs should be unique on the node which sent them.
+    // For instance, each node can use a monotonically increasing integer as their source of message IDs.
+    let mut generated_msg_id: usize = 0;
 
-        match input.body.payload {
-            echo::protocol::Payload::Init { .. } => {
-                let reply = Message {
-                    src: input.dest,
-                    dest: input.src,
-                    body: Body {
-                        msg_id: input.body.msg_id,
-                        in_reply_to: input.body.msg_id,
-                        payload: Payload::InitOk,
-                    },
-                };
+    // Use the lines iterator from the io::BufRead trait. 
+    // This iterator yields lines from a buffer, where each line is terminated by a newline character
+    for line in stdin.lock().lines() {
+        // let input = input.context("Unable to deserialize input.")?;
 
-                // Serialize the struct as JSON
-                let reply_json = serde_json::to_string(&reply)?;
+        // info!("Received {:?}", input);
 
-                info!("Sending back {:?}", reply_json);
+        if let Ok(line) = line {
+            // To deserialize a JSON line, use the from_str function from the serde_json crate. 
+            // This function takes a string and deserializes it into a struct. 
+            let input: Message = serde_json::from_str(&line)?;
+            match input.body.payload {
+                echo::protocol::Payload::Init { .. } => {
+                    let reply = Message {
+                        src: input.dest,
+                        dest: input.src,
+                        body: Body {
+                            msg_id: Some(generated_msg_id),
+                            in_reply_to: input.body.msg_id,
+                            payload: Payload::InitOk,
+                        },
+                    };
 
-                // Print the JSON to stdout
-                writeln!(std_writer, "{}", reply_json)?;
+                    // Serialize the reply into a JSON string
+                    let reply_json = serde_json::to_string(&reply)?;
+
+                    // Send the reply back as byte array
+                    stdout.write_all(reply_json.as_bytes())?;
+                }
+                echo::protocol::Payload::Echo { msg } => {
+                    let reply = Message {
+                        src: input.dest,
+                        dest: input.src,
+                        body: Body {
+                            msg_id: Some(generated_msg_id),
+                            in_reply_to: input.body.msg_id,
+                            payload: Payload::EchoOk { msg },
+                        },
+                    };
+
+                    // Serialize the reply into a JSON string
+                    let reply_json = serde_json::to_string(&reply)?;
+
+                    // Send the reply back as byte array
+                    stdout.write_all(reply_json.as_bytes())?;
+                }
+                echo::protocol::Payload::EchoOk { .. } => {}
+                echo::protocol::Payload::InitOk { .. } => bail!("Unexpected InitOk received"),
             }
-            echo::protocol::Payload::Echo { msg } => {
-                let reply = Message {
-                    src: input.dest,
-                    dest: input.src,
-                    body: Body {
-                        msg_id: input.body.msg_id,
-                        in_reply_to: input.body.msg_id,
-                        payload: Payload::EchoOk { msg },
-                    },
-                };
-
-                // Serialize the struct as JSON
-                let reply_json = serde_json::to_string(&reply)?;
-
-                // Print the JSON to stdout
-                writeln!(std_writer, "{}", reply_json)?;
-            }
-            echo::protocol::Payload::EchoOk { .. } => {}
-            echo::protocol::Payload::InitOk { .. } => bail!("Unexpected InitOk received"),
         }
-    }
+        generated_msg_id += 1;
+    } // end of for loop
 
     Ok(())
 }
