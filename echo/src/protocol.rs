@@ -44,4 +44,8 @@ pub enum Payload {
         node_ids: Vec<String>,
     },
     InitOk,
+    Generate,
+    GenerateOk {
+        id: String,
+    },
 }
