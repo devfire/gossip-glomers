@@ -1,26 +1,16 @@
 use std::io::{BufRead, Write};
 
 use anyhow::bail;
-use chrono::Utc;
+
 use gossip_glomers::protocol::{Body, Message, Payload};
-use rand::Rng;
+
+use ulid::{self, Ulid};
 
 mod protocol;
-
-// use env_logger::Env;
-// use log::{error, info};
-
-pub fn get_unix_timestamp_us() -> i64 {
-    let now = Utc::now();
-    now.timestamp_nanos()
-}
 
 fn main() -> anyhow::Result<()> {
     let stdin = std::io::stdin();
     let mut stdout = std::io::stdout();
-
-    let mut rng = rand::thread_rng();
-    // println!("nanos time: {}", get_unix_timestamp_us());
 
     // Use the lines iterator from the io::BufRead trait.
     // This iterator yields lines from a buffer, where each line is terminated by a newline character
@@ -71,9 +61,11 @@ fn main() -> anyhow::Result<()> {
                 Payload::EchoOk { .. } => {}
                 Payload::InitOk { .. } => bail!("Unexpected InitOk received"),
                 Payload::Generate => {
-                    let first_part: String = get_unix_timestamp_us().to_string();
-                    let second_part: String = rng.gen::<i32>().to_string();
-                    let id = format!("{}{}", first_part, second_part);
+                    // Generate a ulid
+                    let ulid = Ulid::new();
+
+                    // Generate a string for a ulid
+                    let id = ulid.to_string();
 
                     let reply = Message {
                         src: input.dest,
