@@ -2,7 +2,7 @@ use std::io::{BufRead, Write};
 
 use anyhow::bail;
 use chrono::Utc;
-use echo::protocol::{Body, Message, Payload};
+use gossip_glomers::protocol::{Body, Message, Payload};
 use rand::Rng;
 
 mod protocol;
