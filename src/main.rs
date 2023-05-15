@@ -8,9 +8,22 @@ use ulid::{self, Ulid};
 
 mod protocol;
 
+fn send_reply(reply: Message) -> anyhow::Result<()> {
+    let mut stdout = std::io::stdout();
+
+    // Serialize the reply into a JSON string
+    let mut reply_json = serde_json::to_string(&reply)?;
+
+    reply_json.push('\n');
+
+    // Send the reply back as byte array
+    stdout.write_all(reply_json.as_bytes())?;
+
+    Ok(())
+}
+
 fn main() -> anyhow::Result<()> {
     let stdin = std::io::stdin();
-    let mut stdout = std::io::stdout();
 
     // Use the lines iterator from the io::BufRead trait.
     // This iterator yields lines from a buffer, where each line is terminated by a newline character
@@ -31,13 +44,7 @@ fn main() -> anyhow::Result<()> {
                         },
                     };
 
-                    // Serialize the reply into a JSON string
-                    let mut reply_json = serde_json::to_string(&reply)?;
-
-                    reply_json.push('\n');
-
-                    // Send the reply back as byte array
-                    stdout.write_all(reply_json.as_bytes())?;
+                    send_reply(reply)?;
                 }
                 Payload::Echo { echo } => {
                     let reply = Message {
@@ -50,13 +57,7 @@ fn main() -> anyhow::Result<()> {
                         },
                     };
 
-                    // Serialize the reply into a JSON string
-                    let mut reply_json = serde_json::to_string(&reply)?;
-
-                    reply_json.push('\n');
-
-                    // Send the reply back as byte array
-                    stdout.write_all(reply_json.as_bytes())?;
+                    send_reply(reply)?;
                 }
                 Payload::EchoOk { .. } => {}
                 Payload::InitOk { .. } => bail!("Unexpected InitOk received"),
@@ -77,13 +78,7 @@ fn main() -> anyhow::Result<()> {
                         },
                     };
 
-                    // Serialize the reply into a JSON string
-                    let mut reply_json = serde_json::to_string(&reply)?;
-
-                    reply_json.push('\n');
-
-                    // Send the reply back as byte array
-                    stdout.write_all(reply_json.as_bytes())?;
+                    send_reply(reply)?;
                 }
                 Payload::GenerateOk { .. } => {}
             }
