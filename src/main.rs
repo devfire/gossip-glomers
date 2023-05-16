@@ -1,7 +1,5 @@
 use std::io::{BufRead, Write};
 
-use anyhow::bail;
-
 use gossip_glomers::protocol::{Body, Message, Payload};
 
 use ulid::{self, Ulid};
@@ -36,7 +34,7 @@ fn main() -> anyhow::Result<()> {
             // This function takes a string and deserializes it into a struct.
             let input: Message = serde_json::from_str(&line)?;
             match input.body.payload {
-                Payload::Topology { topology } => {
+                Payload::Topology { .. } => {
                     // ack it
                     let reply = Message {
                         src: input.dest,
