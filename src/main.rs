@@ -1,7 +1,5 @@
 use std::io::{BufRead, Write};
 
-use anyhow::bail;
-
 use gossip_glomers::protocol::{Body, Message, Payload};
 
 use ulid::{self, Ulid};
@@ -25,6 +23,9 @@ fn send_reply(reply: Message) -> anyhow::Result<()> {
 fn main() -> anyhow::Result<()> {
     let stdin = std::io::stdin();
 
+    // values received from Broadcast
+    let mut messages: Vec<usize> = Vec::new();
+
     // Use the lines iterator from the io::BufRead trait.
     // This iterator yields lines from a buffer, where each line is terminated by a newline character
     for (generated_msg_id, line) in stdin.lock().lines().enumerate() {
@@ -33,6 +34,51 @@ fn main() -> anyhow::Result<()> {
             // This function takes a string and deserializes it into a struct.
             let input: Message = serde_json::from_str(&line)?;
             match input.body.payload {
+                Payload::Topology { .. } => {
+                    // ack it
+                    let reply = Message {
+                        src: input.dest,
+                        dest: input.src,
+                        body: Body {
+                            msg_id: Some(generated_msg_id),
+                            in_reply_to: input.body.msg_id,
+                            payload: Payload::TopologyOk,
+                        },
+                    };
+                    send_reply(reply)?;
+                }
+                Payload::Broadcast { message } => {
+                    // preserve the message
+                    messages.push(message);
+
+                    // ack it
+                    let reply = Message {
+                        src: input.dest,
+                        dest: input.src,
+                        body: Body {
+                            msg_id: Some(generated_msg_id),
+                            in_reply_to: input.body.msg_id,
+                            payload: Payload::BroadcastOk,
+                        },
+                    };
+                    send_reply(reply)?;
+                }
+
+                Payload::Read => {
+                    let messages = messages.clone();
+
+                    // ack it
+                    let reply = Message {
+                        src: input.dest,
+                        dest: input.src,
+                        body: Body {
+                            msg_id: Some(generated_msg_id),
+                            in_reply_to: input.body.msg_id,
+                            payload: Payload::ReadOk { messages },
+                        },
+                    };
+                    send_reply(reply)?;
+                }
                 Payload::Init { .. } => {
                     let reply = Message {
                         src: input.dest,
@@ -59,8 +105,13 @@ fn main() -> anyhow::Result<()> {
 
                     send_reply(reply)?;
                 }
-                Payload::EchoOk { .. } => {}
-                Payload::InitOk { .. } => bail!("Unexpected InitOk received"),
+                Payload::ReadOk { .. }
+                | Payload::TopologyOk
+                | Payload::EchoOk { .. }
+                | Payload::GenerateOk { .. }
+                | Payload::InitOk { .. }
+                | Payload::BroadcastOk => {}
+
                 Payload::Generate => {
                     // Generate a ulid
                     let ulid = Ulid::new();
@@ -80,7 +131,6 @@ fn main() -> anyhow::Result<()> {
 
                     send_reply(reply)?;
                 }
-                Payload::GenerateOk { .. } => {}
             }
         }
     } // end of for loop
