@@ -1,4 +1,4 @@
-use std::io::{BufRead, Write};
+use std::{io::{BufRead, Write}, collections::{HashSet, HashMap}};
 
 use gossip_glomers::protocol::{Body, Message, Payload};
 
@@ -24,7 +24,10 @@ fn main() -> anyhow::Result<()> {
     let stdin = std::io::stdin();
 
     // values received from Broadcast
-    let mut messages: Vec<usize> = Vec::new();
+    let mut messages: HashSet<usize> = HashSet::new();
+
+    // messages we know the neighbors have received
+    let mut confirmed_received: HashMap<String, HashSet<usize>>;
 
     // Use the lines iterator from the io::BufRead trait.
     // This iterator yields lines from a buffer, where each line is terminated by a newline character
@@ -49,7 +52,7 @@ fn main() -> anyhow::Result<()> {
                 }
                 Payload::Broadcast { message } => {
                     // preserve the message
-                    messages.push(message);
+                    messages.insert(message);
 
                     // ack it
                     let reply = Message {
