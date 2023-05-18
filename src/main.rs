@@ -17,15 +17,6 @@ fn main() -> anyhow::Result<()> {
         neighborhood: HashSet::new(),
     };
 
-    // values received from Broadcast
-    // let mut messages: HashSet<usize> = HashSet::new();
-
-    // messages we know the neighbors have received
-    // let mut confirmed_received: HashMap<String, HashSet<usize>> = HashMap::new();
-
-    // the list of nodes we should gossip with
-    // let mut neighborhood: Vec<String>;
-
     // Use the lines iterator from the io::BufRead trait.
     // This iterator yields lines from a buffer, where each line is terminated by a newline character
     for (generated_msg_id, line) in stdin.lock().lines().enumerate() {
@@ -73,12 +64,7 @@ fn main() -> anyhow::Result<()> {
                     // ack the received broadcast
                     broadcast.send_reply(reply)?;
 
-                    // persist who sent what so we can avoid sending this msg back to its source
-                    // confirmed_received
-                    //     .entry(input.src)
-                    //     .or_default()
-                    //     .insert(message);
-
+                    // tell everyone else what we just got
                     broadcast.gossip(&input.src, message)?;
                 }
 
