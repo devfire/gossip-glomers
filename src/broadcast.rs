@@ -37,7 +37,7 @@ impl Broadcast {
         for (generated_msg_id, neighbor) in self.neighborhood.iter().enumerate() {
             let gossip_message = Message {
                 src: source.clone(),
-                dest: *neighbor,
+                dest: neighbor.clone(),
                 body: Body {
                     msg_id: Some(generated_msg_id),
                     in_reply_to: None,
