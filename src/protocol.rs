@@ -60,7 +60,7 @@ pub enum Payload {
         messages: HashSet<usize>,
     },
     Topology {
-        topology: HashMap<String, Vec<String>>,
+        topology: HashMap<String, HashSet<String>>,
     },
     TopologyOk,
 }
