@@ -52,7 +52,7 @@ fn main() -> anyhow::Result<()> {
 
                     // ack it
                     let reply = Message {
-                        src: input.dest,
+                        src: input.dest.clone(),
                         dest: input.src.clone(),
                         body: Body {
                             msg_id: Some(generated_msg_id),
@@ -65,7 +65,7 @@ fn main() -> anyhow::Result<()> {
                     broadcast.send_reply(reply)?;
 
                     // tell everyone else what we just got
-                    broadcast.gossip(&input.src, message)?;
+                    broadcast.gossip(&input.dest, message)?;
                 }
 
                 Payload::Read => {
