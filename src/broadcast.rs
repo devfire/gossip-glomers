@@ -39,10 +39,10 @@ impl Broadcast {
     }
 
     pub fn gossip(&mut self, source: &String, message: usize) -> anyhow::Result<()> {
-        if self.messages.contains(&message) {
-            // we've seen this message before, bail
-            return Ok(());
-        }
+        // if self.messages.contains(&message) {
+        //     // we've seen this message before, bail
+        //     return Ok(());
+        // }
 
         // ok we've NOT seen this before, tell everyone
         for (generated_msg_id, neighbor) in self.neighborhood.iter().enumerate() {
