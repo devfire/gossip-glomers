@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io::BufRead};
+use std::{collections::{HashSet, HashMap}, io::BufRead};
 
 use gossip_glomers::{
     broadcast::Broadcast,
@@ -15,6 +15,7 @@ fn main() -> anyhow::Result<()> {
     let mut broadcast = Broadcast {
         messages: HashSet::new(),
         neighborhood: HashSet::new(),
+        received_from: HashMap::new(),
     };
 
     // Use the lines iterator from the io::BufRead trait.
@@ -62,6 +63,9 @@ fn main() -> anyhow::Result<()> {
                             payload: Payload::BroadcastOk,
                         },
                     };
+
+                    // persist the message and its origin
+                    broadcast.received_from.insert(message, input.src);
 
                     // ack the received broadcast
                     broadcast.send_reply(reply)?;
