@@ -1,30 +1,21 @@
-use std::io::{BufRead, Write};
+use std::{collections::HashSet, io::BufRead};
 
-use gossip_glomers::protocol::{Body, Message, Payload};
+use gossip_glomers::{
+    broadcast::Broadcast,
+    protocol::{Body, Message, Payload},
+};
 
 use ulid::{self, Ulid};
 
 mod protocol;
 
-fn send_reply(reply: Message) -> anyhow::Result<()> {
-    let mut stdout = std::io::stdout();
-
-    // Serialize the reply into a JSON string
-    let mut reply_json = serde_json::to_string(&reply)?;
-
-    reply_json.push('\n');
-
-    // Send the reply back as byte array
-    stdout.write_all(reply_json.as_bytes())?;
-
-    Ok(())
-}
-
 fn main() -> anyhow::Result<()> {
     let stdin = std::io::stdin();
 
-    // values received from Broadcast
-    let mut messages: Vec<usize> = Vec::new();
+    let mut broadcast = Broadcast {
+        messages: HashSet::new(),
+        neighborhood: HashSet::new(),
+    };
 
     // Use the lines iterator from the io::BufRead trait.
     // This iterator yields lines from a buffer, where each line is terminated by a newline character
@@ -34,7 +25,20 @@ fn main() -> anyhow::Result<()> {
             // This function takes a string and deserializes it into a struct.
             let input: Message = serde_json::from_str(&line)?;
             match input.body.payload {
-                Payload::Topology { .. } => {
+                Payload::Topology { mut topology } => {
+                    // Removes a key from the map, returning the value at the key,
+                    // if the key was previously in the map.
+                    //
+                    // We need this to figure out who our neighbors are.
+                    broadcast.neighborhood = topology
+                        .remove(&input.dest)
+                        .unwrap_or_else(|| panic!("Failed extracting our hood from topology"));
+
+                    // println!(
+                    //     "I am {} my hood is {:?} ",
+                    //     input.dest, broadcast.neighborhood
+                    // );
+
                     // ack it
                     let reply = Message {
                         src: input.dest,
@@ -45,27 +49,29 @@ fn main() -> anyhow::Result<()> {
                             payload: Payload::TopologyOk,
                         },
                     };
-                    send_reply(reply)?;
+                    broadcast.send_reply(reply)?;
                 }
                 Payload::Broadcast { message } => {
-                    // preserve the message
-                    messages.push(message);
-
                     // ack it
                     let reply = Message {
-                        src: input.dest,
-                        dest: input.src,
+                        src: input.dest.clone(),
+                        dest: input.src.clone(),
                         body: Body {
                             msg_id: Some(generated_msg_id),
                             in_reply_to: input.body.msg_id,
                             payload: Payload::BroadcastOk,
                         },
                     };
-                    send_reply(reply)?;
+
+                    // ack the received broadcast
+                    broadcast.send_reply(reply)?;
+
+                    // tell everyone else what we just got
+                    broadcast.gossip(&input.dest, message)?;
                 }
 
                 Payload::Read => {
-                    let messages = messages.clone();
+                    let messages = broadcast.get_messages()?;
 
                     // ack it
                     let reply = Message {
@@ -77,7 +83,7 @@ fn main() -> anyhow::Result<()> {
                             payload: Payload::ReadOk { messages },
                         },
                     };
-                    send_reply(reply)?;
+                    broadcast.send_reply(reply)?;
                 }
                 Payload::Init { .. } => {
                     let reply = Message {
@@ -90,7 +96,7 @@ fn main() -> anyhow::Result<()> {
                         },
                     };
 
-                    send_reply(reply)?;
+                    broadcast.send_reply(reply)?;
                 }
                 Payload::Echo { echo } => {
                     let reply = Message {
@@ -103,7 +109,7 @@ fn main() -> anyhow::Result<()> {
                         },
                     };
 
-                    send_reply(reply)?;
+                    broadcast.send_reply(reply)?;
                 }
                 Payload::ReadOk { .. }
                 | Payload::TopologyOk
@@ -129,7 +135,7 @@ fn main() -> anyhow::Result<()> {
                         },
                     };
 
-                    send_reply(reply)?;
+                    broadcast.send_reply(reply)?;
                 }
             }
         }
