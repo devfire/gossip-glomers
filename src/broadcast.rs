@@ -41,6 +41,7 @@ impl Broadcast {
     pub fn gossip(&mut self, source: &str, message: usize) -> anyhow::Result<()> {
         if self.messages.contains(&message) {
             // we've seen this message before, bail
+            // println!("Seen {message} bailing");
             return Ok(());
         }
 
@@ -58,6 +59,10 @@ impl Broadcast {
 
             self.send_reply(gossip_message)?;
         }
+
+        // save it for the future
+        self.add_message(message);
+
         Ok(())
     }
 }
