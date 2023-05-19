@@ -38,16 +38,16 @@ impl Broadcast {
         Ok(self.messages.clone())
     }
 
-    pub fn gossip(&mut self, source: &String, message: usize) -> anyhow::Result<()> {
-        // if self.messages.contains(&message) {
-        //     // we've seen this message before, bail
-        //     return Ok(());
-        // }
+    pub fn gossip(&mut self, source: &str, message: usize) -> anyhow::Result<()> {
+        if self.messages.contains(&message) {
+            // we've seen this message before, bail
+            return Ok(());
+        }
 
         // ok we've NOT seen this before, tell everyone
         for (generated_msg_id, neighbor) in self.neighborhood.iter().enumerate() {
             let gossip_message = Message {
-                src: source.clone(),
+                src: source.to_owned(),
                 dest: neighbor.clone(),
                 body: Body {
                     msg_id: Some(generated_msg_id),

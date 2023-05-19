@@ -34,6 +34,11 @@ fn main() -> anyhow::Result<()> {
                         .remove(&input.dest)
                         .unwrap_or_else(|| panic!("Failed extracting our hood from topology"));
 
+                    println!(
+                        "I am {} my hood is {:?} ",
+                        input.dest, broadcast.neighborhood
+                    );
+
                     // ack it
                     let reply = Message {
                         src: input.dest,
