@@ -14,10 +14,17 @@ pub struct Broadcast {
     pub neighborhood: HashSet<String>,
 
     // this keeps track of who sent what msg
-    pub received_from: HashMap<usize, String>,
+    pub received: HashMap<usize, String>,
 }
 
 impl Broadcast {
+    pub fn new() -> Broadcast {
+        Broadcast {
+            messages: HashSet::new(),
+            neighborhood: HashSet::new(),
+            received: HashMap::new(),
+        }
+    }
     pub fn send_reply(&self, reply: Message) -> anyhow::Result<()> {
         let mut stdout = std::io::stdout();
 
@@ -63,7 +70,7 @@ impl Broadcast {
                 },
             };
 
-            if let Some(node) = self.received_from.get(&message) {
+            if let Some(node) = self.received .get(&message) {
                 // someone sent us this msg, let's see if it's the node we are about to send it back to
                 if node != neighbor {
                     // someone else sent this to us, so it's ok to send it back

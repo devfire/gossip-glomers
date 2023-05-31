@@ -57,7 +57,9 @@ pub enum Payload {
     BroadcastOk,
     Read,
     ReadOk {
-        messages: HashSet<usize>,
+        // reason why this is an Option is because in main match
+        // we don't know the value yet. The receive channel loop will fill it in
+        messages: Option<HashSet<usize>>,
     },
     Topology {
         topology: HashMap<String, HashSet<String>>,
