@@ -1,4 +1,4 @@
-use std::{collections::{HashSet, HashMap}, io::BufRead};
+use std::{collections::{HashSet, HashMap}, io::BufRead, thread};
 
 use gossip_glomers::{
     broadcast::Broadcast,
@@ -21,7 +21,11 @@ fn main() -> anyhow::Result<()> {
     // Use the lines iterator from the io::BufRead trait.
     // This iterator yields lines from a buffer, where each line is terminated by a newline character
     for (generated_msg_id, line) in stdin.lock().lines().enumerate() {
+        
         if let Ok(line) = line {
+
+            thread::spawn(move || {
+            
             // To deserialize a JSON line, use the from_str function from the serde_json crate.
             // This function takes a string and deserializes it into a struct.
             let input: Message = serde_json::from_str(&line)?;
@@ -141,8 +145,11 @@ fn main() -> anyhow::Result<()> {
 
                     broadcast.send_reply(reply)?;
                 }
-            }
-        }
+        
+            }// end of match input.body.payload
+        });
+        }// end of if let Ok
+    
     } // end of for loop
 
     Ok(())
