@@ -1,8 +1,5 @@
 use crate::protocol::{Body, Payload};
-use std::{
-    collections::{HashMap, HashSet},
-    io::Write,
-};
+use std::{collections::HashSet, io::Write};
 
 use crate::protocol::Message;
 
@@ -12,9 +9,6 @@ pub struct Broadcast {
 
     // neighbors we receive from Topology messages
     pub neighborhood: HashSet<String>,
-
-    // this keeps track of who sent what msg
-    pub received_from: HashMap<usize, String>,
 }
 
 impl Broadcast {
@@ -63,15 +57,7 @@ impl Broadcast {
                 },
             };
 
-            if let Some(node) = self.received_from.get(&message) {
-                // someone sent us this msg, let's see if it's the node we are about to send it back to
-                if node != neighbor {
-                    // someone else sent this to us, so it's ok to send it back
-                    self.send_reply(gossip_message)?;
-                } else {
-                    // oh no, it is the same node, skip it
-                }
-            }
+            self.send_reply(gossip_message)?;
         }
 
         // save it for the future
